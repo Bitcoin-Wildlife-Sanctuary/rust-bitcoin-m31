@@ -271,7 +271,7 @@ mod test {
     use crate::treepp::*;
     use crate::{
         cm31_add, cm31_copy, cm31_double, cm31_equalverify, cm31_mul, cm31_mul_by_constant,
-        cm31_mul_m31, cm31_mul_m31_by_constant, cm31_roll, cm31_sub, m31_add, m31_double,
+        cm31_mul_m31, cm31_mul_m31_by_constant, cm31_roll, cm31_sub,
     };
     use p3_field::extension::Complex;
     use p3_field::{AbstractField, PrimeField32};
@@ -285,7 +285,7 @@ mod test {
     #[test]
     fn test_cm31_add() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
-        eprintln!("cm31 add: {}", m31_add().len());
+        eprintln!("cm31 add: {}", cm31_add().len());
 
         for _ in 0..100 {
             let a = prng.gen::<F>();
@@ -312,7 +312,7 @@ mod test {
     #[test]
     fn test_cm31_double() {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
-        eprintln!("cm31 double: {}", m31_double().len());
+        eprintln!("cm31 double: {}", cm31_double().len());
 
         for _ in 0..100 {
             let a = prng.gen::<F>();

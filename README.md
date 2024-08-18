@@ -11,6 +11,15 @@ For M31, we have:
 - multiplication: 1415 weight units
 - multiplication by constant: ~744 weight units (M31)
 
+For the complex extension of M31 using x^2 + 1, we have:
+
+- addition: 39 weight units
+- subtraction: 28 weight units
+- multiplication: 4351 weight units
+- multiplication by constant: ~2306 weight units
+- multiplication by M31: 2840 weight units
+- multiplication by M31 constant: ~1489 weight units
+
 For the degree-4 extension of M31 using y^2 - 2 - i over the complex field x^2 + 1, we have:
 
 - addition: 84 weight units
