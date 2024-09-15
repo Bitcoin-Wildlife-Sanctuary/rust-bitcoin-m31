@@ -240,6 +240,9 @@ pub fn m31_neg() -> Script {
         { MOD }
         OP_SWAP
         OP_SUB
+        OP_DUP { MOD } OP_EQUAL OP_IF
+            OP_DROP 0
+        OP_ENDIF
     }
 }
 
@@ -256,6 +259,9 @@ pub fn n31_neg() -> Script {
         { -(MOD as i64) }
         OP_SWAP
         OP_SUB
+        OP_DUP { -(MOD as i64) } OP_EQUAL OP_IF
+            OP_DROP 0
+        OP_ENDIF
     }
 }
 
@@ -643,5 +649,14 @@ mod test {
             let exec_result = execute_script(script);
             assert!(exec_result.success);
         }
+
+        let script = script! {
+                { 0 }
+                m31_neg
+                { 0 }
+                OP_EQUAL
+            };
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
     }
 }
