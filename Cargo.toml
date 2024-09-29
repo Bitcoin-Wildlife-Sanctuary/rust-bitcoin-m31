@@ -1,6 +1,6 @@
 [package]
 name = "rust-bitcoin-m31"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 
 [dependencies]
@@ -13,7 +13,6 @@ rand_chacha = "0.3.1"
 rand = "0.8.5"
 p3-field = { git = "https://github.com/Plonky3/Plonky3" }
 p3-mersenne-31 = { git = "https://github.com/Plonky3/Plonky3" }
-
 
 [profile.release]
 opt-level = 3
