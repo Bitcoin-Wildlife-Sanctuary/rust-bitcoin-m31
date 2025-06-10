@@ -274,7 +274,7 @@ mod test {
         cm31_mul_m31, cm31_mul_m31_by_constant, cm31_roll, cm31_sub,
     };
     use p3_field::extension::Complex;
-    use p3_field::{AbstractField, PrimeField32};
+    use p3_field::{PrimeCharacteristicRing, PrimeField32};
     use p3_mersenne_31::Mersenne31;
     use rand::{Rng, SeedableRng};
     use rand_chacha::ChaCha20Rng;
@@ -288,8 +288,8 @@ mod test {
         eprintln!("cm31 add: {}", cm31_add().len());
 
         for _ in 0..100 {
-            let a = prng.gen::<F>();
-            let b = prng.gen::<F>();
+            let a = prng.random::<F>();
+            let b = prng.random::<F>();
 
             let c = a.add(b);
 
@@ -315,7 +315,7 @@ mod test {
         eprintln!("cm31 double: {}", cm31_double().len());
 
         for _ in 0..100 {
-            let a = prng.gen::<F>();
+            let a = prng.random::<F>();
             let c = a.double();
 
             let script = script! {
@@ -338,8 +338,8 @@ mod test {
         eprintln!("cm31 sub: {}", cm31_sub().len());
 
         for _ in 0..100 {
-            let a = prng.gen::<F>();
-            let b = prng.gen::<F>();
+            let a = prng.random::<F>();
+            let b = prng.random::<F>();
 
             let c = a.sub(b);
 
@@ -365,8 +365,8 @@ mod test {
         eprintln!("cm31 mul: {}", cm31_mul().len());
 
         for _ in 0..100 {
-            let a = prng.gen::<F>();
-            let b = prng.gen::<F>();
+            let a = prng.random::<F>();
+            let b = prng.random::<F>();
 
             let c = a.mul(b);
 
@@ -393,8 +393,8 @@ mod test {
         let mut total_len = 0;
 
         for _ in 0..100 {
-            let a = prng.gen::<F>();
-            let b = prng.gen::<F>();
+            let a = prng.random::<F>();
+            let b = prng.random::<F>();
 
             let mul_script =
                 cm31_mul_by_constant(b.imag().as_canonical_u32(), b.real().as_canonical_u32());
@@ -425,8 +425,8 @@ mod test {
         eprintln!("cm31 mul_m31: {}", cm31_mul_m31().len());
 
         for _ in 0..100 {
-            let a = prng.gen::<F>();
-            let b = prng.gen::<Mersenne31>();
+            let a = prng.random::<F>();
+            let b = prng.random::<Mersenne31>();
 
             let c = a.mul(b);
 
@@ -452,8 +452,8 @@ mod test {
         let mut total_len = 0;
 
         for _ in 0..100 {
-            let a = prng.gen::<F>();
-            let b = prng.gen::<Mersenne31>();
+            let a = prng.random::<F>();
+            let b = prng.random::<Mersenne31>();
 
             let mul_script = cm31_mul_m31_by_constant(b.as_canonical_u32());
 
@@ -481,8 +481,8 @@ mod test {
     fn test_cm31_copy() {
         let mut rng = ChaCha20Rng::seed_from_u64(0u64);
 
-        let a = rng.gen::<F>();
-        let b = rng.gen::<F>();
+        let a = rng.random::<F>();
+        let b = rng.random::<F>();
 
         let copy_script = cm31_copy(1);
 
@@ -512,8 +512,8 @@ mod test {
     fn test_cm31_roll() {
         let mut rng = ChaCha20Rng::seed_from_u64(0u64);
 
-        let a = rng.gen::<F>();
-        let b = rng.gen::<F>();
+        let a = rng.random::<F>();
+        let b = rng.random::<F>();
 
         let roll_script = cm31_roll(1);
 

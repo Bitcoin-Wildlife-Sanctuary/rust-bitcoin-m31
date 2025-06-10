@@ -206,10 +206,10 @@ mod test {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
 
         for _ in 0..100 {
-            let a1: P3M31 = prng.gen();
-            let b1: P3M31 = prng.gen();
-            let a2: P3M31 = prng.gen();
-            let b2: P3M31 = prng.gen();
+            let a1: P3M31 = prng.random();
+            let b1: P3M31 = prng.random();
+            let a2: P3M31 = prng.random();
+            let b2: P3M31 = prng.random();
 
             let first = a1.mul(b2).add(a2.mul(b1));
             let second = b1.mul(b2).sub(a1.mul(a2));
@@ -232,10 +232,10 @@ mod test {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
 
         for _ in 0..100 {
-            let a1: P3M31 = prng.gen();
-            let b1: P3M31 = prng.gen();
-            let a2: P3M31 = prng.gen();
-            let b2: P3M31 = prng.gen();
+            let a1: P3M31 = prng.random();
+            let b1: P3M31 = prng.random();
+            let a2: P3M31 = prng.random();
+            let b2: P3M31 = prng.random();
 
             let first = a1.mul(b2).add(a2.mul(b1));
             let second = b1.mul(b2).sub(a1.mul(a2));
@@ -258,15 +258,15 @@ mod test {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
 
         for _ in 0..100 {
-            let a1: P3M31 = prng.gen();
-            let b1: P3M31 = prng.gen();
-            let c1: P3M31 = prng.gen();
-            let d1: P3M31 = prng.gen();
+            let a1: P3M31 = prng.random();
+            let b1: P3M31 = prng.random();
+            let c1: P3M31 = prng.random();
+            let d1: P3M31 = prng.random();
 
-            let a2: P3M31 = prng.gen();
-            let b2: P3M31 = prng.gen();
-            let c2: P3M31 = prng.gen();
-            let d2: P3M31 = prng.gen();
+            let a2: P3M31 = prng.random();
+            let b2: P3M31 = prng.random();
+            let c2: P3M31 = prng.random();
+            let d2: P3M31 = prng.random();
 
             let group1_first = a1.mul(b2).add(a2.mul(b1));
             let group1_second = b1.mul(b2).sub(a1.mul(a2));
@@ -304,15 +304,15 @@ mod test {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
 
         for _ in 0..100 {
-            let a1: P3M31 = prng.gen();
-            let b1: P3M31 = prng.gen();
-            let c1: P3M31 = prng.gen();
-            let d1: P3M31 = prng.gen();
+            let a1: P3M31 = prng.random();
+            let b1: P3M31 = prng.random();
+            let c1: P3M31 = prng.random();
+            let d1: P3M31 = prng.random();
 
-            let a2: P3M31 = prng.gen();
-            let b2: P3M31 = prng.gen();
-            let c2: P3M31 = prng.gen();
-            let d2: P3M31 = prng.gen();
+            let a2: P3M31 = prng.random();
+            let b2: P3M31 = prng.random();
+            let c2: P3M31 = prng.random();
+            let d2: P3M31 = prng.random();
 
             let group1_first = a1.mul(b2).add(a2.mul(b1));
             let group1_second = b1.mul(b2).sub(a1.mul(a2));
@@ -349,8 +349,8 @@ mod test {
         let mut rng = ChaCha20Rng::seed_from_u64(0u64);
 
         for _ in 0..100 {
-            let a: Complex<p3_mersenne_31::Mersenne31> = rng.gen();
-            let b: Complex<p3_mersenne_31::Mersenne31> = rng.gen();
+            let a: Complex<p3_mersenne_31::Mersenne31> = rng.random();
+            let b: Complex<p3_mersenne_31::Mersenne31> = rng.random();
             let c = a.mul(b);
 
             let script = script! {

@@ -281,40 +281,23 @@ pub fn m31_to_bits() -> Script {
     }
 }
 
-pub(crate) fn m31_mul_common() -> Script {
+fn get_window(index: u32) -> Script {
+    use m31_mul_optimized::*;
+
+    let s = W_WIDTH * (N_WINDOW - index - 1);
+    let e = N_BITS.min(s + W_WIDTH);
+
     script! {
-        0
-        OP_SWAP
-        m31_to_n31
-        OP_DUP
-        n31_double
-        OP_2DUP
-        n31_add
-        0
-        OP_FROMALTSTACK
-        OP_IF
-            3 OP_PICK
-            m31_add_n31
-        OP_ENDIF
-        m31_double
-        m31_double
-        for _ in 0..14 {
-            OP_FROMALTSTACK
-            OP_FROMALTSTACK
-            OP_SWAP OP_DUP OP_ADD OP_ADD
-            4 OP_SWAP OP_SUB OP_PICK
-            m31_add_n31
-            m31_double
-            m31_double
+        // in: {m} {g}
+        for i in (s..e).rev() {
+            if index > 0 { OP_SWAP }        // {g} {acc?} {m}
+            { 1 << i }                      // {g} {acc?} {m} {1<<i}
+            OP_2DUP OP_GREATERTHANOREQUAL   // {g} {acc?} {m} {1<<i} {bit}
+            OP_IF OP_SUB 0 OP_ENDIF OP_NOT  // {g} {acc?} {m-1<<i} {bit}
+            if i < e - 1 {
+                OP_ROT OP_DUP OP_ADD OP_ADD // {g} {m-1<<i} {2acc?+bit}
+            }
         }
-        OP_FROMALTSTACK
-        OP_FROMALTSTACK
-        OP_SWAP OP_DUP OP_ADD OP_ADD
-        4 OP_SWAP OP_SUB OP_PICK
-        m31_add_n31
-        OP_TOALTSTACK
-        OP_2DROP OP_2DROP
-        OP_FROMALTSTACK
     }
 }
 
@@ -328,27 +311,41 @@ pub(crate) fn m31_mul_common() -> Script {
 /// - m31
 ///
 pub fn m31_mul() -> Script {
-    script! {
-        m31_to_bits
-        for _ in 0..31 {
-            OP_TOALTSTACK
-        }
-        m31_mul_common
-    }
-}
+    use m31_mul_optimized::*;
 
-/// Square an M31 element.
-///
-/// Input:
-/// - m31
-///
-/// Output:
-/// - m31
-///
-pub fn m31_square() -> Script {
+    let pre_compute_table = script! {
+        for i in 2..=W_WIDTH {
+            for j in 1 << (i - 1)..1 << i {
+                if j % 2 == 0 {
+                    { pick(j / 2 - 1) }
+                    { n31_double(j) }
+                } else {
+                    OP_DUP
+                    { pick(j - 1) }
+                    { n31_add(j + 1) }
+                }
+            }
+        }
+        for i in 2..1<<W_WIDTH { {i-1} OP_ROLL }
+        0
+    };
+
     script! {
-        OP_DUP
-        m31_mul
+        { MOD } OP_ROT
+        { m31_to_n31(1) }
+        { pre_compute_table }
+        0 // acc
+        { 2 + (1 << W_WIDTH) } OP_ROLL
+        for i in 0..N_WINDOW {
+            { get_window(i) } 2 OP_ADD OP_PICK
+            OP_ROT { m31_add_n31(3 + (1 << W_WIDTH)) }
+            if i < N_WINDOW - 1 {
+                for _ in 0..W_WIDTH { { m31_double(2 + (1 << W_WIDTH)) } }
+            }
+        }
+        OP_TOALTSTACK
+        for _ in 0..=(1 << W_WIDTH) / 2 { OP_2DROP }
+        OP_FROMALTSTACK
     }
 }
 
@@ -466,6 +463,21 @@ pub fn find_naf(mut num: u32) -> Vec<i8> {
     res
 }
 
+/// Square an M31 element.
+///
+/// Input:
+/// - m31
+///
+/// Output:
+/// - m31
+///
+pub fn m31_square() -> Script {
+    script! {
+        OP_DUP
+        m31_mul
+    }
+}
+
 #[cfg(test)]
 mod test {
     use rand::{Rng, SeedableRng};
@@ -479,8 +491,8 @@ mod test {
         eprintln!("m31 add: {}", m31_add().len());
 
         for _ in 0..100 {
-            let a: u32 = prng.gen();
-            let b: u32 = prng.gen();
+            let a: u32 = prng.random();
+            let b: u32 = prng.random();
 
             let a_m31 = a % MOD;
             let b_m31 = b % MOD;
@@ -504,8 +516,8 @@ mod test {
         eprintln!("m31 sub: {}", m31_sub().len());
 
         for _ in 0..100 {
-            let a: u32 = prng.gen();
-            let b: u32 = prng.gen();
+            let a: u32 = prng.random();
+            let b: u32 = prng.random();
 
             let a_m31 = a % MOD;
             let b_m31 = b % MOD;
@@ -528,7 +540,7 @@ mod test {
         let mut prng = ChaCha20Rng::seed_from_u64(0u64);
 
         for _ in 0..100 {
-            let a: u32 = prng.gen();
+            let a: u32 = prng.random();
             let m31 = a % MOD;
 
             let mut bits = vec![];
@@ -558,7 +570,7 @@ mod test {
         eprintln!("m31 square: {}", m31_square().len());
 
         for _ in 0..100 {
-            let a: u32 = prng.gen();
+            let a: u32 = prng.random();
 
             let a_m31 = a % MOD;
             let prod_m31 = ((((a_m31 as u64) * (a_m31 as u64)) % (MOD as u64)) & 0xffffffff) as u32;
@@ -580,8 +592,8 @@ mod test {
         eprintln!("m31 mul: {}", m31_mul().len());
 
         for _ in 0..100 {
-            let a: u32 = prng.gen();
-            let b: u32 = prng.gen();
+            let a: u32 = prng.random();
+            let b: u32 = prng.random();
 
             let a_m31 = a % MOD;
             let b_m31 = b % MOD;
@@ -605,8 +617,8 @@ mod test {
 
         let mut total_len = 0;
         for _ in 0..100 {
-            let a: u32 = prng.gen();
-            let b: u32 = prng.gen();
+            let a: u32 = prng.random();
+            let b: u32 = prng.random();
 
             let a_m31 = a % MOD;
             let b_m31 = b % MOD;
@@ -635,7 +647,7 @@ mod test {
         eprintln!("m31 neg: {}", m31_neg().len());
 
         for _ in 0..100 {
-            let a: u32 = prng.gen();
+            let a: u32 = prng.random();
 
             let a_m31 = a % MOD;
             let b_m31 = MOD - a_m31;
@@ -651,12 +663,121 @@ mod test {
         }
 
         let script = script! {
-                { 0 }
-                m31_neg
-                { 0 }
-                OP_EQUAL
-            };
+            { 0 }
+            m31_neg
+            { 0 }
+            OP_EQUAL
+        };
         let exec_result = execute_script(script);
         assert!(exec_result.success);
+    }
+}
+
+mod m31_mul_optimized {
+    use super::*;
+
+    pub const W_WIDTH: u32 = 2;
+    pub const N_BITS: u32 = u32::BITS - MOD.leading_zeros();
+    pub const N_WINDOW: u32 = (N_BITS + W_WIDTH - 1) / W_WIDTH;
+
+    /// Copy item at given depth to the top
+    pub fn pick(depth: u32) -> Script {
+        match depth {
+            0 => script! { OP_DUP },
+            1 => script! { OP_OVER },
+            _ => script! { {depth} OP_PICK },
+        }
+    }
+
+    pub fn m31_to_n31(mod_depth: u32) -> Script {
+        script! {
+            if mod_depth > 0 {
+                { pick(mod_depth) }
+            } else { { MOD } }
+            OP_SUB
+        }
+    }
+
+    fn n31_to_m31(mod_depth: u32) -> Script {
+        script! {
+            if mod_depth > 0 {
+                { pick(mod_depth) }
+            } else { { MOD } }
+            OP_ADD
+        }
+    }
+
+    pub fn n31_double(mod_depth: u32) -> Script {
+        script! {
+            OP_DUP
+            { n31_add(if mod_depth == 0 { 0 } else { mod_depth + 1 }) }
+        }
+    }
+
+    pub fn n31_add(mod_depth: u32) -> Script {
+        script! {
+            { n31_to_m31(mod_depth) }
+            { n31_add_m31(mod_depth) }
+        }
+    }
+
+    fn n31_add_m31(mut mod_depth: u32) -> Script {
+        if mod_depth > 0 {
+            mod_depth -= 1;
+        }
+        script! {
+            OP_ADD { n31_adjust(mod_depth) }
+        }
+    }
+
+    fn n31_adjust(mod_depth: u32) -> Script {
+        script! {
+            OP_DUP
+            0 OP_GREATERTHANOREQUAL
+            OP_IF
+                if mod_depth > 0 {
+                    { pick(mod_depth) }
+                } else { { MOD } }
+                OP_SUB
+            OP_ENDIF
+        }
+    }
+
+    pub fn m31_add_n31(mut mod_depth: u32) -> Script {
+        if mod_depth > 0 {
+            mod_depth -= 1;
+        }
+        script! {
+            OP_ADD { m31_adjust(mod_depth) }
+        }
+    }
+
+    fn m31_adjust(mod_depth: u32) -> Script {
+        script! {
+            OP_DUP
+            0 OP_LESSTHAN
+            OP_IF
+                if mod_depth > 0 {
+                    { pick(mod_depth) }
+                } else { { MOD } }
+                OP_ADD
+            OP_ENDIF
+        }
+    }
+
+    pub fn m31_double(mut mod_depth: u32) -> Script {
+        if mod_depth > 0 {
+            mod_depth += 1
+        }
+        script! {
+            OP_DUP { m31_add(mod_depth) }
+        }
+    }
+
+    fn m31_add(mod_depth: u32) -> Script {
+        script! {
+            { m31_to_n31(mod_depth) }
+            { m31_add_n31(mod_depth) }
+        }
     }
 }
