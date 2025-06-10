@@ -36,6 +36,11 @@ equivalent to `OP_SWAP`).
 
 Thanks to [Shahar Papini](https://x.com/PapiniShahar) from Starkware for pointing out that double Karatsuba can improve the performance for QM31.
 
+Thanks to [Belove Bist](https://x.com/BeloveBist) from Alpen Labs for an improved version of M31 multiplication that reuses
+the M31 modulus instead of allocating them repeatedly (since the M31 modulus would take about five bytes). This brings in
+significant improvement in terms of multiplication. The M31 multiplication reduces from 1415 weight units to 1060, CM31
+multiplication reduces from 4351 to 3277, and QM31 multiplication reduces from 13321 to 10126.
+
 A windowing method is used to reduce the multiplication overhead further, but it was not as powerful as expected.
 
 The introduction of a dual form, `n31`, for which `m31 + n31` are more efficient than `m31 + m31` or `n31 + n31`, brings 
@@ -50,8 +55,3 @@ already uses a lookup table).
 If one of the multipliers is a constant, we have more efficient multiplication using a relaxed NAF representation, 
 which saves from 1415 down to \~744 for M31 on degree-1 element multiplication in this special case. We use "\~" to 
 emphasize that this cost is variable and depends on the constant.
-
-Thanks to [Belove Bist](https://x.com/BeloveBist) from Alpen Labs for an improved version of M31 multiplication that reuses
-the M31 modulus instead of allocating them repeatedly (since the M31 modulus would take about five bytes). This brings in 
-significant improvement in terms of multiplication. The M31 multiplication reduces from 1415 weight units to 1060, CM31 
-multiplication reduces from 4351 to 3277, and QM31 multiplication reduces from 13321 to 10126.
