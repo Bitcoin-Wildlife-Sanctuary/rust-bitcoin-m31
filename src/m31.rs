@@ -256,10 +256,12 @@ pub fn m31_neg() -> Script {
 ///
 pub fn n31_neg() -> Script {
     script! {
-        n31_to_m31
-        m31_neg
-        m31_to_n31
-        n31_adjust
+        { -(MOD as i64) }
+        OP_SWAP
+        OP_SUB
+        OP_DUP 0 OP_EQUAL OP_IF
+            OP_DROP { -(MOD as i64) }
+        OP_ENDIF
     }
 }
 
