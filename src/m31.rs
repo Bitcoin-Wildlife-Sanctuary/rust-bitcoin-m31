@@ -256,12 +256,10 @@ pub fn m31_neg() -> Script {
 ///
 pub fn n31_neg() -> Script {
     script! {
-        { -(MOD as i64) }
-        OP_SWAP
-        OP_SUB
-        OP_DUP { -(MOD as i64) } OP_EQUAL OP_IF
-            OP_DROP 0
-        OP_ENDIF
+        n31_to_m31
+        m31_neg
+        m31_to_n31
+        n31_adjust
     }
 }
 
@@ -666,6 +664,55 @@ mod test {
             { 0 }
             m31_neg
             { 0 }
+            OP_EQUAL
+        };
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
+    }
+
+    #[test]
+    fn test_n31_neg() {
+        let mut prng = ChaCha20Rng::seed_from_u64(7u64);
+
+        // Randomized checks: for a in [0, MOD)
+        for _ in 0..100 {
+            let a: u32 = prng.random();
+            let a_m31 = a % MOD;
+
+            // Input as n31: a - MOD (range: (-MOD..0])
+            let a_n31 = (a_m31 as i64) - (MOD as i64);
+
+            // Expected twisted negative: if a_m31 == 0 -> -MOD else -> -(a_m31)
+            let expected_n31 = if a_m31 == 0 {
+                -(MOD as i64)
+            } else {
+                -(a_m31 as i64)
+            };
+
+            let script = script! {
+                { a_n31 }
+                n31_neg
+                { expected_n31 }
+                OP_EQUAL
+            };
+            let exec_result = execute_script(script);
+            assert!(exec_result.success);
+        }
+
+        // Edge cases: canonical and non-canonical zeros both map to canonical -MOD
+        let script = script! {
+            { -(MOD as i64) }  // canonical twisted zero
+            n31_neg
+            { -(MOD as i64) }
+            OP_EQUAL
+        };
+        let exec_result = execute_script(script);
+        assert!(exec_result.success);
+
+        let script = script! {
+            0  // non-canonical twisted zero
+            n31_neg
+            { -(MOD as i64) }
             OP_EQUAL
         };
         let exec_result = execute_script(script);
